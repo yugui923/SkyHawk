@@ -1,7 +1,7 @@
 # import dependencies
 import pandas as pd
 
-from saas_metrics import file_intake, calculate_metrics
+from saas_metrics import file_intake, calculate_metrics, visualize
 
 # import and clean up raw flat file
 df = file_intake.read_sample_1()
@@ -31,9 +31,8 @@ ending_arr = pd.DataFrame(df_revenue.sum(axis=0), columns=['ending_arr'])
 df_arr_summary = df_arr_summary.merge(ending_arr, left_index=True, right_index=True, how='left')
 
 # generate # of customer summary table from saas delta dataframes
-df_customer_summary = pd.DataFrame(index=lst_dates)  # TODO
+df_customer_summary = pd.DataFrame(index=lst_dates)
 for i in [0, 2, 4]:
-    print(i)
     saas_delta_sum = pd.DataFrame(results[i].astype(bool).sum(axis=0), columns=[summary_col_names[i]])
     df_customer_summary = df_customer_summary.merge(saas_delta_sum, left_index=True, right_index=True, how='left')
 
@@ -42,5 +41,8 @@ df_customer_summary.loc[:, 'total_churned'] = -df_customer_summary.loc[:, 'total
 
 ending_active_customers = pd.DataFrame(df_revenue.astype(bool).sum(axis=0), columns=['ending_active_customers'])
 df_customer_summary = df_customer_summary.merge(ending_active_customers, left_index=True, right_index=True, how='left')
+
+# TODO visualize
+visualize.heatmap(df_arr_summary)
 
 input('end of main')

@@ -1,5 +1,6 @@
 .idea/
 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -129,3 +130,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+saas_metrics/__pycache__/__init__.cpython-311.pyc
+saas_metrics/__pycache__/calculate_metrics.cpython-311.pyc
+saas_metrics/__pycache__/file_intake.cpython-311.pyc
