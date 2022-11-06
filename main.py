@@ -2,7 +2,7 @@
 
 def main():
     if __name__ == '__main__':
-        saas_metrics.parse
+        print()
 
 
 # Press the green button in the gutter to run the script.
