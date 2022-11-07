@@ -1,5 +1,4 @@
 """
-TODO
-generate report with metrics and reference range
+TODO generate report with metrics and reference range
 
 """

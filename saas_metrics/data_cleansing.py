@@ -1,10 +1,9 @@
+"""
+TODO convert columns to time range
+"""
 import numpy as np
 import pandas as pd
 
-"""
-TODO
-convert columns to time range
-"""
 
 
 def clean_df_revenue(df_revenue: pd.DataFrame) -> pd.DataFrame:

@@ -10,11 +10,11 @@ df_revenue = data_cleansing.clean_df_revenue(df_revenue)
 analysis = saas_metrics.SaaSMetrics(df_revenue)
 
 # calculate summaries of $ARR and #customers
-arr_summary = analysis.arr_delta_summary()
+revenue_summary = analysis.revenue_delta_summary()
 customer_summary = analysis.customer_delta_summary()
 
 # TODO visualize
-visualize.heatmap(arr_summary)
-visualize.heatmap(customer_summary)
+visualize.heatmap(revenue_summary.iloc[:, :6])
+visualize.heatmap(customer_summary.iloc[:, :6])
 
 input('end of main')
