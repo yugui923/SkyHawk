@@ -1,5 +1,11 @@
+"""
+v0.1.0
+"""
+
 import numpy as np
 import pandas as pd
+
+from saas_metrics import data_validator
 
 
 class SaaSMetrics:
@@ -15,7 +21,7 @@ class SaaSMetrics:
         self.df_new = pd.DataFrame()
 
         # initialize summary dataframes
-        self.df_arr_summary = None
+        self.df_revenue_summary = None
         self.df_customer_summary = None
 
     def _check_five_saas_delta_calculation(self):
@@ -29,6 +35,7 @@ class SaaSMetrics:
                    self.df_expansion,
                    self.df_new
                    ]:
+            # if columns number less than 1, the call calculation function
             if df.shape[1] < 1:
                 self.calculate_five_saas_delta()
                 break
@@ -45,6 +52,10 @@ class SaaSMetrics:
         """
         print("calculating 5 SaaS delta dataframes...")
 
+        # validate revenue dataframe before starting data manipulation
+        if data_validator.validate_df_revenue(self.df_revenue_by_customer):
+            print('ERROR: revenue dataframe does not pass data validation')
+
         # calculate analysis helpers
         df_analysis_helper = pd.DataFrame(index=self.df_revenue_by_customer.index)
         df_analysis_helper['first_time_as_customer'] = self.df_revenue_by_customer.ne(0).idxmax(axis='columns')
@@ -53,7 +64,7 @@ class SaaSMetrics:
 
         n_time_periods = len(self.df_revenue_by_customer.columns)
 
-        # calculate churned revenue
+        # calculate the revenue delta attributable to churned customers
         self.df_churned = pd.DataFrame(index=self.df_revenue_by_customer.index)
         for i in range(n_time_periods - 1):
             i = i + 1  # align i with current period (second period)
@@ -67,7 +78,7 @@ class SaaSMetrics:
             self.df_churned = pd.concat([self.df_churned, new_column], axis='columns')
         self.df_churned.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
 
-        # calculate contraction revenue
+        # calculate the revenue delta attributable to contraction customers
         self.df_contraction = pd.DataFrame(index=self.df_revenue_by_customer.index)
         for i in range(n_time_periods - 1):
             i = i + 1  # align i with current period (second period)
@@ -82,7 +93,7 @@ class SaaSMetrics:
             self.df_contraction = pd.concat([self.df_contraction, new_column], axis='columns')
         self.df_contraction.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
 
-        # calculate resurrected revenue
+        # calculate the revenue delta attributable to resurrected customers
         self.df_resurrected = pd.DataFrame(index=self.df_revenue_by_customer.index)
         for i in range(n_time_periods - 1):
             i = i + 1  # align i with current period (second period)
@@ -97,7 +108,7 @@ class SaaSMetrics:
             self.df_resurrected = pd.concat([self.df_resurrected, new_column], axis='columns')
         self.df_resurrected.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
 
-        # calculate expansion revenue
+        # calculate the revenue delta attributable to expansion customers
         self.df_expansion = pd.DataFrame(index=self.df_revenue_by_customer.index)
         for i in range(n_time_periods - 1):
             i = i + 1  # align i with current period (second period)
@@ -111,7 +122,7 @@ class SaaSMetrics:
             self.df_expansion = pd.concat([self.df_expansion, new_column], axis='columns')
         self.df_expansion.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
 
-        # calculate new revenue
+        # calculate the revenue delta attributable to new customers
         self.df_new = pd.DataFrame(index=self.df_revenue_by_customer.index)
         for i in range(n_time_periods - 1):
             i = i + 1  # align i with current period (second period)
@@ -126,13 +137,23 @@ class SaaSMetrics:
             self.df_new = pd.concat([self.df_new, new_column], axis='columns')
         self.df_new.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
 
-        print("completed: SaaS 5 delta calculation")
+        # checksum comparing total of 5 SaaS delta and the actual revenue delta over periods
+        total_saas_delta = (self.df_churned.to_numpy().sum() +
+                            self.df_contraction.to_numpy().sum() +
+                            self.df_resurrected.to_numpy().sum() +
+                            self.df_expansion.to_numpy().sum() +
+                            self.df_new.to_numpy().sum())
+        revenue_delta = (self.df_revenue_by_customer.iloc[:, -1].to_numpy().sum() -
+                         self.df_revenue_by_customer.iloc[:, 0].to_numpy().sum())
+        checksum_diff = total_saas_delta - revenue_delta
+
+        print(f"completed: SaaS 5 delta calculation\n   checksum diff = {checksum_diff:.2f}")
 
         return 0
 
-    def arr_delta_summary(self):
+    def revenue_delta_summary(self):
         """
-        generate $ of ARR summary table from SaaS delta dataframes
+        generate $ of revenue delta summary table from SaaS delta dataframes
         """
         self._check_five_saas_delta_calculation()
         column_names = [
@@ -143,27 +164,35 @@ class SaaSMetrics:
             'total_new'
         ]
 
-        self.df_arr_summary = pd.DataFrame(index=self.df_revenue_by_customer.columns.tolist())
+        # sum up churned, contraction, resurrected, expansion, new revenues
+        self.df_revenue_summary = pd.DataFrame(index=self.df_revenue_by_customer.columns.tolist())
         for i, df in enumerate([self.df_churned,
                                 self.df_contraction,
                                 self.df_resurrected,
                                 self.df_expansion,
                                 self.df_new
                                 ]):
-            saas_delta_sum = pd.DataFrame(df.sum(axis=0), columns=[column_names[i]])
-            self.df_arr_summary = self.df_arr_summary.merge(saas_delta_sum, left_index=True, right_index=True,
-                                                            how='left')
+            saas_delta = pd.DataFrame(df.sum(axis='index'), columns=[column_names[i]])
+            self.df_revenue_summary = self.df_revenue_summary.merge(saas_delta, left_index=True, right_index=True,
+                                                                    how='left')
 
-        # TODO sum all changes and checksum against delta ARR
+        # calculate ending revenue directly from raw revenue data
+        ending_revenue = pd.DataFrame(self.df_revenue_by_customer.sum(axis=0), columns=['ending_revenue'])
+        self.df_revenue_summary = self.df_revenue_summary.merge(ending_revenue, left_index=True, right_index=True,
+                                                                how='left')
 
-        ending_arr = pd.DataFrame(self.df_revenue_by_customer.sum(axis=0), columns=['ending_arr'])
-        self.df_arr_summary = self.df_arr_summary.merge(ending_arr, left_index=True, right_index=True, how='left')
+        # checksum comparing total of 5 SaaS delta and the actual revenue delta over periods
+        total_saas_delta = self.df_revenue_summary.iloc[:, :5].fillna(0).to_numpy().sum()
+        revenue_delta = ending_revenue.diff(axis=0).fillna(0).to_numpy().sum()
+        total_checksum_diff = total_saas_delta - revenue_delta
 
-        return self.df_arr_summary
+        print(f'completed: revenue delta summary\n   checksum diff = {total_checksum_diff:.2f}')
+
+        return self.df_revenue_summary
 
     def customer_delta_summary(self):
         """
-        generate # of customer summary table from SaaS delta dataframes
+        generate # of customer delta summary table from SaaS delta dataframes
         """
         self._check_five_saas_delta_calculation()
         column_names = [
@@ -172,23 +201,31 @@ class SaaSMetrics:
             'total_new'
         ]
 
+        # sum up churned, resurrected, new customers
         self.df_customer_summary = pd.DataFrame(index=self.df_revenue_by_customer.columns.tolist())
         for i, df in enumerate([self.df_churned,
                                 self.df_resurrected,
                                 self.df_new
                                 ]):
-            saas_delta_sum = pd.DataFrame(df.astype(bool).sum(axis=0), columns=[column_names[i]])
-            self.df_customer_summary = self.df_customer_summary.merge(saas_delta_sum, left_index=True, right_index=True,
+            saas_delta = pd.DataFrame(df.astype(bool).sum(axis=0), columns=[column_names[i]])
+            self.df_customer_summary = self.df_customer_summary.merge(saas_delta, left_index=True, right_index=True,
                                                                       how='left')
 
         # reverse signs for churned customers
         self.df_customer_summary.loc[:, 'total_churned'] = -self.df_customer_summary.loc[:, 'total_churned']
 
-        # TODO sum all changes and checksum against delta customers
-
+        # calculate ending active customers from raw revenue data
         ending_active_customers = pd.DataFrame(self.df_revenue_by_customer.astype(bool).sum(axis=0),
                                                columns=['ending_active_customers'])
         self.df_customer_summary = self.df_customer_summary.merge(ending_active_customers, left_index=True,
                                                                   right_index=True,
                                                                   how='left')
+
+        # checksum comparing total of 5 SaaS delta and the actual customer count delta over periods
+        total_saas_delta = self.df_customer_summary.iloc[:, :3].fillna(0).to_numpy().sum()
+        customer_delta = ending_active_customers.diff(axis=0).fillna(0).to_numpy().sum()
+        total_checksum_diff = total_saas_delta - customer_delta
+
+        print(f'completed: customer delta summary\n   checksum diff = {total_checksum_diff:.2f}')
+
         return self.df_customer_summary
