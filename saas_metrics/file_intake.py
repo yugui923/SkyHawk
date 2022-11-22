@@ -10,7 +10,7 @@ def read_sample_1():
 
     df = pd.read_csv('sample_data/Sample 1 raw data.csv', skiprows=2)
 
-    df.rename(columns={'Customer ID': 'id', 'Industry': 'industry'}, inplace=True)
+    df = df.rename(columns={'Customer ID': 'id', 'Industry': 'industry'})
     df.loc[:, 'id'] = df.loc[:, 'id'].replace("[$,]", "", regex=True).astype(int)
     df_revenue = df.filter(items=['2017', '2018', '2019', '2020'], axis='columns')
 

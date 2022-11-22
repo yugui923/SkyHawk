@@ -76,7 +76,7 @@ class SaaSMetrics:
                 np.where(condition, -self.df_revenue_by_customer.iloc[:, i - 1], 0),
                 index=self.df_revenue_by_customer.index)
             self.df_churned = pd.concat([self.df_churned, new_column], axis='columns')
-        self.df_churned.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
+        self.df_churned = self.df_churned.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns')
 
         # calculate the revenue delta attributable to contraction customers
         self.df_contraction = pd.DataFrame(index=self.df_revenue_by_customer.index)
@@ -91,7 +91,8 @@ class SaaSMetrics:
                 np.where(condition, self.df_revenue_by_customer.iloc[:, i] - self.df_revenue_by_customer.iloc[:, i - 1],
                          0), index=self.df_revenue_by_customer.index)
             self.df_contraction = pd.concat([self.df_contraction, new_column], axis='columns')
-        self.df_contraction.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
+        self.df_contraction = self.df_contraction.set_axis(self.df_revenue_by_customer.columns[1:].to_list(),
+                                                           axis='columns')
 
         # calculate the revenue delta attributable to resurrected customers
         self.df_resurrected = pd.DataFrame(index=self.df_revenue_by_customer.index)
@@ -106,7 +107,8 @@ class SaaSMetrics:
                 np.where(condition, self.df_revenue_by_customer.iloc[:, i], 0),
                 index=self.df_revenue_by_customer.index)
             self.df_resurrected = pd.concat([self.df_resurrected, new_column], axis='columns')
-        self.df_resurrected.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
+        self.df_resurrected = self.df_resurrected.set_axis(self.df_revenue_by_customer.columns[1:].to_list(),
+                                                           axis='columns')
 
         # calculate the revenue delta attributable to expansion customers
         self.df_expansion = pd.DataFrame(index=self.df_revenue_by_customer.index)
@@ -120,7 +122,8 @@ class SaaSMetrics:
                 np.where(condition, self.df_revenue_by_customer.iloc[:, i] - self.df_revenue_by_customer.iloc[:, i - 1],
                          0), index=self.df_revenue_by_customer.index)
             self.df_expansion = pd.concat([self.df_expansion, new_column], axis='columns')
-        self.df_expansion.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
+        self.df_expansion = self.df_expansion.set_axis(self.df_revenue_by_customer.columns[1:].to_list(),
+                                                       axis='columns')
 
         # calculate the revenue delta attributable to new customers
         self.df_new = pd.DataFrame(index=self.df_revenue_by_customer.index)
@@ -135,7 +138,7 @@ class SaaSMetrics:
                 np.where(condition, self.df_revenue_by_customer.iloc[:, i], 0),
                 index=self.df_revenue_by_customer.index)
             self.df_new = pd.concat([self.df_new, new_column], axis='columns')
-        self.df_new.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns', inplace=True)
+        self.df_new = self.df_new.set_axis(self.df_revenue_by_customer.columns[1:].to_list(), axis='columns')
 
         # checksum comparing total of 5 SaaS delta and the actual revenue delta over periods
         total_saas_delta = (self.df_churned.to_numpy().sum() +

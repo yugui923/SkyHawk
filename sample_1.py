@@ -23,6 +23,6 @@ excel_writer = pd.ExcelWriter('output_sample_1.xlsx', engine='xlsxwriter')
 revenue_summary.to_excel(excel_writer, sheet_name='Revenue Summary')
 customer_summary.to_excel(excel_writer, sheet_name='Customer Summary')
 
-excel_writer.save()
+excel_writer.close()
 
 input('end of main')
