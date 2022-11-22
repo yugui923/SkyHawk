@@ -1,4 +1,5 @@
 # import dependencies
+import pandas as pd
 
 from saas_metrics import file_intake, data_cleansing, saas_metrics, visualize
 
@@ -16,5 +17,12 @@ customer_summary = analysis.customer_delta_summary()
 # TODO visualize
 visualize.heatmap(revenue_summary.iloc[:, :6])
 visualize.heatmap(customer_summary.iloc[:, :6])
+
+# TODO Export chart to Excel
+excel_writer = pd.ExcelWriter('output_sample_1.xlsx', engine='xlsxwriter')
+revenue_summary.to_excel(excel_writer, sheet_name='Revenue Summary')
+customer_summary.to_excel(excel_writer, sheet_name='Customer Summary')
+
+excel_writer.save()
 
 input('end of main')
