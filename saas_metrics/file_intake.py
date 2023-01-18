@@ -15,3 +15,18 @@ def read_sample_1():
     df_revenue = df.filter(items=['2017', '2018', '2019', '2020'], axis='columns')
 
     return df_revenue
+
+
+def read_csv(file_name):
+    """
+    *POC*
+    This function is not generalized to handle generic files
+    """
+
+    df = pd.read_csv('GVCF/' + file_name, skiprows=2)
+
+    df = df.rename(columns={'ID': 'id'})
+    df.loc[:, 'id'] = df.loc[:, 'id']
+    df_revenue = df.filter(items=['2017', '2018', '2019', '2020', '2021'], axis='columns')
+
+    return df_revenue
